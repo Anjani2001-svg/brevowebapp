@@ -4,50 +4,44 @@
   <meta charset="utf-8" />
   <title>Brevo Chat Test</title>
 
-  <!-- Brevo widget script pasted here -->
-<script>
+  <!-- 1) Setup FIRST -->
+  <script>
+    window.BrevoConversationsSetup = window.BrevoConversationsSetup || {};
+
+    window.BrevoConversationsSetup.onNewMessage = async function (message) {
+      const text = (message && message.text) || (message && message.message && message.message.text);
+      const isVisitor = (message && message.type === "visitor") || (message && message.sender === "visitor");
+      if (!text || !isVisitor) return;
+
+      try {
+        const res = await fetch("https://anjani0123-slcchatbot.hf.space/brevo-webhook", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: { text } })
+        });
+
+        const reply = await res.text();
+        BrevoConversations("sendAutoMessage", reply);
+      } catch (err) {
+        BrevoConversations("sendAutoMessage", "Sorry — I cannot reply right now.");
+      }
+    };
+  </script>
+
+  <!-- 2) Widget SECOND -->
+  <script>
     (function(d, w, c) {
-        w.BrevoConversationsID = '695baaa2f5fe81aff600292e';
-        w[c] = w[c] || function() {
-            (w[c].q = w[c].q || []).push(arguments);
-        };
-        var s = d.createElement('script');
-        s.async = true;
-        s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
-        if (d.head) d.head.appendChild(s);
+      w.BrevoConversationsID = '695baaa2f5fe81aff600292e';
+      w[c] = w[c] || function() { (w[c].q = w[c].q || []).push(arguments); };
+      var s = d.createElement('script');
+      s.async = true;
+      s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
+      if (d.head) d.head.appendChild(s);
     })(document, window, 'BrevoConversations');
-</script>
-<!-- /Brevo Conversations {/literal} -->
+  </script>
 </head>
+
 <body>
   <h2>Brevo Chat Test Page</h2>
-
-  <script>
-  // Listen for new visitor messages in Brevo chat
-  window.BrevoConversationsSetup = window.BrevoConversationsSetup || {};
-
-  window.BrevoConversationsSetup.onNewMessage = async function (message) {
-    // Only respond to visitor messages (prevents replying to our own auto-messages)
-    if (!message || message.type !== "visitor" || !message.text) return;
-
-    try {
-      const res = await fetch("https://anjani0123-slcchatbot.hf.space/brevo-webhook", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: { text: message.text }
-        })
-      });
-
-      // If your FastAPI returns plain text:
-      const reply = await res.text();
-
-      // Send reply back into the Brevo widget
-      BrevoConversations("sendAutoMessage", reply);
-    } catch (err) {
-      BrevoConversations("sendAutoMessage", "Sorry — I cannot reply right now.");
-    }
-  };
-</script>
 </body>
 </html>
