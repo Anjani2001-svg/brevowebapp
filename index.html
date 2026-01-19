@@ -4,40 +4,44 @@
   <meta charset="utf-8" />
   <title>Brevo Chat Test</title>
 
-  <!-- 1) Setup FIRST -->
   <script>
-    window.BrevoConversationsSetup = window.BrevoConversationsSetup || {};
+    // 1) DEFINE CALLBACK BEFORE WIDGET LOADS
+    window.BrevoConversationsSetup = {
+      onNewMessage: async function (message) {
+        console.log("New message event:", message);
 
-    window.BrevoConversationsSetup.onNewMessage = async function (message) {
-      const text = (message && message.text) || (message && message.message && message.message.text);
-      const isVisitor = (message && message.type === "visitor") || (message && message.sender === "visitor");
-      if (!text || !isVisitor) return;
+        // Only reply to visitor messages
+        if (!message || message.type !== "visitor" || !message.text) return;
 
-      try {
-        const res = await fetch("https://anjani0123-slcchatbot.hf.space/brevo-webhook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: { text } })
-        });
+        try {
+          const res = await fetch("https://anjani0123-slcchatbot.hf.space/brevo-webhook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: { text: message.text } })
+          });
 
-        const reply = await res.text();
-        BrevoConversations("sendAutoMessage", reply);
-      } catch (err) {
-        BrevoConversations("sendAutoMessage", "Sorry — I cannot reply right now.");
+          const reply = await res.text();
+          console.log("Bot reply from HF:", reply);
+
+          BrevoConversations("sendAutoMessage", reply);
+        } catch (e) {
+          console.error("Bot call failed:", e);
+          BrevoConversations("sendAutoMessage", "Sorry — I cannot reply right now.");
+        }
       }
     };
   </script>
 
-  <!-- 2) Widget SECOND -->
   <script>
+    // 2) LOAD BREVO WIDGET AFTER SETUP IS READY
     (function(d, w, c) {
-      w.BrevoConversationsID = '695baaa2f5fe81aff600292e';
+      w.BrevoConversationsID = "695baaa2f5fe81aff600292e";
       w[c] = w[c] || function() { (w[c].q = w[c].q || []).push(arguments); };
-      var s = d.createElement('script');
+      var s = d.createElement("script");
       s.async = true;
-      s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
-      if (d.head) d.head.appendChild(s);
-    })(document, window, 'BrevoConversations');
+      s.src = "https://conversations-widget.brevo.com/brevo-conversations.js";
+      d.head.appendChild(s);
+    })(document, window, "BrevoConversations");
   </script>
 </head>
 
@@ -45,4 +49,3 @@
   <h2>Brevo Chat Test Page</h2>
 </body>
 </html>
-
